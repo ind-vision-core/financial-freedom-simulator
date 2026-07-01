@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1000 Alternative Universes — Financial Freedom Simulator</title>
+
+  <!-- Fonts: display / body / mono, each with a distinct job -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind (utility layout) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Chart.js (extreme-timeline line charts) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['"Plus Jakarta Sans"', 'sans-serif'],
+            body: ['Inter', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            base:  '#121212',
+            panel: '#17171b',
+            ink:   '#ededf0',
+            mute:  '#8a8a94',
+            accent:'#9a8bff',
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    :root{
+      --accent:#9a8bff;      /* lavender     */
+      --accent-soft:#c9beff; /* light violet */
+      --cyan:#5fe0d8;        /* aurora cyan  */
+      --coral:#ff7a6b;       /* worst-case   */
+      --hair:rgba(255,255,255,.09);
+    }
+
+    html{ scroll-behavior:smooth; }
+
+    /* Deep charcoal with two very faint corner glows for depth */
+    body{
+      background:
+        radial-gradient(1100px 700px at 15% -10%, rgba(122,111,240,.10), transparent 60%),
+        radial-gradient(1000px 800px at 100% 110%, rgba(95,224,214,.07), transparent 55%),
+        #121212;
+      background-attachment:fixed;
+    }
+
+    /* Ambient "1,000 timelines" canvas — the signature element */
+    #bg{ position:fixed; inset:0; z-index:-1; pointer-events:none; }
+
+    /* ---------- Hero title lockup ---------- */
+    .title-num{
+      font-family:"Plus Jakarta Sans",sans-serif;
+      font-weight:800;
+      font-size:clamp(5.5rem, 21vw, 16rem);
+      line-height:.82;
+      letter-spacing:-.04em;
+      font-variant-numeric:tabular-nums;
+      background:linear-gradient(115deg,#d7cfff 0%,#9a8bff 38%,#6fe0e6 100%);
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+      filter:drop-shadow(0 8px 40px rgba(122,111,240,.25));
+    }
+    .title-word{
+      font-family:"Plus Jakarta Sans",sans-serif;
+      font-weight:600;
+      font-size:clamp(1.15rem, 4.6vw, 3.1rem);
+      letter-spacing:.34em;
+      text-transform:uppercase;
+      color:#f4f4f6;
+    }
+    .eyebrow{
+      font-family:"JetBrains Mono",monospace;
+      font-size:clamp(.62rem,1.4vw,.78rem);
+      letter-spacing:.44em; text-transform:uppercase; color:var(--mute,#8a8a94);
+    }
+
+    /* ---------- Scroll cue ---------- */
+    .scroll-cue .arrow{ animation:bob 2.1s ease-in-out infinite; }
+    @keyframes bob{ 0%,100%{ transform:translateY(0); opacity:.5 } 50%{ transform:translateY(7px); opacity:1 } }
+
+    /* ---------- Scroll reveal ---------- */
+    [data-reveal]{ opacity:0; transform:translateY(26px); transition:opacity .85s cubic-bezier(.16,1,.3,1), transform .85s cubic-bezier(.16,1,.3,1); transition-delay:var(--d,0ms); }
+    [data-reveal].in{ opacity:1; transform:none; }
+
+    /* ---------- Range sliders ---------- */
+    .range{
+      -webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:999px; cursor:pointer; outline:none;
+      background:linear-gradient(90deg, var(--accent) 0%, var(--accent) var(--fill,50%), rgba(255,255,255,.09) var(--fill,50%), rgba(255,255,255,.09) 100%);
+    }
+    .range::-webkit-slider-thumb{
+      -webkit-appearance:none; appearance:none; width:20px; height:20px; border-radius:50%;
+      background:#fff; border:none; cursor:pointer;
+      box-shadow:0 0 0 4px rgba(154,139,255,.16), 0 3px 12px rgba(0,0,0,.55);
+      transition:transform .16s ease, box-shadow .16s ease;
+    }
+    .range::-webkit-slider-thumb:hover{ transform:scale(1.14); }
+    .range:focus-visible::-webkit-slider-thumb{ box-shadow:0 0 0 5px rgba(154,139,255,.4), 0 3px 12px rgba(0,0,0,.55); }
+    .range::-moz-range-track{ height:4px; border-radius:999px; background:transparent; }
+    .range::-moz-range-progress{ height:4px; border-radius:999px; background:var(--accent); }
+    .range::-moz-range-thumb{
+      width:20px; height:20px; border-radius:50%; background:#fff; border:none; cursor:pointer;
+      box-shadow:0 0 0 4px rgba(154,139,255,.16), 0 3px 12px rgba(0,0,0,.55); transition:transform .16s ease;
+    }
+    .range::-moz-range-thumb:hover{ transform:scale(1.14); }
+
+    .readout{ font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+
+    /* ---------- Persona cards ---------- */
+    .persona{
+      position:relative; text-align:left; border-radius:16px; padding:1.25rem 1.25rem 1.35rem;
+      background:rgba(255,255,255,.02); border:1px solid var(--hair);
+      transition:transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+    }
+    .persona:hover{ transform:translateY(-3px); border-color:rgba(255,255,255,.2); background:rgba(255,255,255,.035); }
+    .persona:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+    .persona .dot{ width:9px; height:9px; border-radius:50%; background:var(--tint); box-shadow:0 0 12px var(--tint); }
+    .persona[aria-pressed="true"]{
+      border-color:var(--tint);
+      background:
+        radial-gradient(120% 120% at 0% 0%, color-mix(in srgb, var(--tint) 14%, transparent), transparent 60%),
+        rgba(255,255,255,.02);
+      box-shadow:0 0 0 1px var(--tint), 0 18px 40px -22px var(--tint);
+    }
+    .persona .check{ opacity:0; transition:opacity .2s ease; }
+    .persona[aria-pressed="true"] .check{ opacity:1; }
+
+    /* ---------- Primary action button (Save & Simulate) ---------- */
+    .btn-primary{
+      position:relative; display:inline-flex; align-items:center; justify-content:center; gap:.6rem;
+      font-family:"Plus Jakarta Sans",sans-serif; font-weight:700; font-size:1rem; letter-spacing:.01em;
+      color:#0e0e12; padding:1rem 2.1rem; border-radius:999px; cursor:pointer; border:none; min-height:56px;
+      background:linear-gradient(120deg,#d7cfff 0%,#9a8bff 45%,#6fe0e6 100%);
+      box-shadow:0 12px 44px -12px rgba(122,111,240,.6), inset 0 1px 0 rgba(255,255,255,.45);
+      transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
+    }
+    .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 18px 54px -12px rgba(122,111,240,.78), inset 0 1px 0 rgba(255,255,255,.5); filter:brightness(1.04); }
+    .btn-primary:active{ transform:translateY(0); }
+    .btn-primary:focus-visible{ outline:2px solid #fff; outline-offset:3px; }
+    .btn-primary:disabled{ cursor:default; filter:saturate(.7) brightness(.92); transform:none; box-shadow:0 8px 30px -14px rgba(122,111,240,.5); }
+    .btn-primary .spinner{ width:16px; height:16px; border-radius:50%; border:2px solid rgba(14,14,18,.3); border-top-color:#0e0e12; animation:spin .7s linear infinite; }
+    @keyframes spin{ to{ transform:rotate(360deg) } }
+
+    /* ---------- Simulation status ---------- */
+    #sim{ opacity:0; transform:translateY(14px); transition:opacity .7s ease, transform .7s ease; pointer-events:none; scroll-margin-top:20vh; }
+    #sim.revealed{ opacity:1; transform:none; pointer-events:auto; }
+    .sim-bar{ position:relative; height:2px; border-radius:2px; background:rgba(255,255,255,.08); overflow:hidden; }
+    .sim-bar::after{ content:""; position:absolute; top:0; bottom:0; left:-42%; width:42%; background:linear-gradient(90deg, transparent, var(--accent), transparent); animation:sweep 1.7s ease-in-out infinite; }
+    @keyframes sweep{ 0%{ left:-42% } 100%{ left:100% } }
+    .dots span{ animation:blink 1.4s infinite both; }
+    .dots span:nth-child(2){ animation-delay:.2s; }
+    .dots span:nth-child(3){ animation-delay:.4s; }
+    @keyframes blink{ 0%,80%,100%{ opacity:.2 } 40%{ opacity:1 } }
+
+    /* ---------- Story card ---------- */
+    .story-card{ border-radius:22px; border:1px solid var(--hair); background:rgba(255,255,255,.02); padding:2rem; }
+    .pull{ margin-top:1.75rem; padding-left:1.1rem; border-left:2px solid var(--accent); font-family:"Plus Jakarta Sans",sans-serif; font-weight:600; font-size:clamp(1.15rem,2.6vw,1.6rem); line-height:1.4; color:#f2f0ff; }
+    @media (min-width:768px){ .story-card{ padding:2.75rem; } }
+
+    /* ---------- Result panel ---------- */
+    .panel{
+      position:relative; border-radius:26px; border:1px solid rgba(255,255,255,.1); overflow:hidden; padding:2rem;
+      background:linear-gradient(180deg, rgba(154,139,255,.06), rgba(255,255,255,.012));
+    }
+    .panel::before{ content:""; position:absolute; inset:0 0 auto 0; height:1px; background:linear-gradient(90deg,transparent,rgba(154,139,255,.6),rgba(95,224,214,.6),transparent); }
+    @media (min-width:768px){ .panel{ padding:3rem; } }
+    .stat-num{
+      font-family:"Plus Jakarta Sans",sans-serif; font-weight:800;
+      font-size:clamp(3.5rem, 10vw, 7rem); line-height:.9; letter-spacing:-.03em; font-variant-numeric:tabular-nums;
+      background:linear-gradient(120deg,#d7cfff,#9a8bff 45%,#6fe0e6);
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+    }
+
+    /* ---------- Extreme timelines ---------- */
+    .extreme-card{ border-radius:22px; border:1px solid var(--hair); background:rgba(255,255,255,.02); padding:1.6rem; }
+    @media (min-width:768px){ .extreme-card{ padding:1.9rem; } }
+    .tag{ display:inline-flex; align-items:center; gap:.45rem; font-family:"JetBrains Mono",monospace; font-size:.62rem; letter-spacing:.2em; text-transform:uppercase; padding:.34rem .7rem; border-radius:999px; border:1px solid currentColor; }
+    .tag .pip{ width:7px; height:7px; border-radius:50%; background:currentColor; box-shadow:0 0 10px currentColor; }
+    .chart-frame{ position:relative; height:240px; margin-top:1.25rem; border-radius:16px; border:1px solid var(--hair); background:rgba(255,255,255,.015); padding:14px 14px 10px; }
+    @media (max-width:480px){ .chart-frame{ height:210px; } }
+    .legend-chip{ display:flex; flex-wrap:wrap; gap:1.1rem; font-family:"JetBrains Mono",monospace; font-size:.6rem; letter-spacing:.12em; text-transform:uppercase; color:var(--mute); }
+    .legend-chip i{ display:inline-block; width:14px; height:2px; border-radius:2px; margin-right:.35rem; vertical-align:middle; }
+
+    /* ---------- Epilogue / footer ---------- */
+    .rules-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:1.75rem; }
+    .rule-item{ display:flex; gap:1.1rem; align-items:flex-start; }
+    .rule-num{ flex:none; font-family:"JetBrains Mono",monospace; font-weight:500; font-size:.95rem; letter-spacing:.05em; line-height:1.5; color:var(--accent); font-variant-numeric:tabular-nums; }
+    .rule-title{ font-family:"Plus Jakarta Sans",sans-serif; font-weight:600; font-size:1.05rem; color:#ededf0; }
+    .rule-desc{ margin-top:.3rem; font-size:.92rem; line-height:1.6; color:#8a8a94; }
+
+    /* Stacked, full-width footer action buttons */
+    .foot-btn{ display:inline-flex; align-items:center; justify-content:center; gap:.55rem; width:100%; font-family:"Plus Jakarta Sans",sans-serif; font-size:.95rem; border-radius:.75rem; padding:.75rem 1.5rem; transition:background .22s ease, color .22s ease, border-color .22s ease, transform .18s ease, box-shadow .22s ease; }
+    .foot-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+    /* Newsletter & feedback — subtle panel style */
+    .news-btn{ background:rgba(255,255,255,.03); color:#ededf0; font-weight:500; border:1px solid var(--hair); }
+    .news-btn:hover{ background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.2); transform:translateY(-2px); }
+
+    /* Crypto tip box — MetaMask */
+    .crypto-box{ border-radius:16px; border:1px solid var(--hair); background:linear-gradient(180deg, rgba(154,139,255,.06), rgba(255,255,255,.012)); padding:1.35rem 1.4rem; }
+    .crypto-addr-row{ display:flex; align-items:stretch; gap:.6rem; margin-top:.25rem; }
+    .crypto-addr{ flex:1; min-width:0; display:flex; align-items:center; font-family:"JetBrains Mono",monospace; font-size:.72rem; letter-spacing:.02em; color:#ededf0; background:rgba(0,0,0,.28); border:1px solid var(--hair); border-radius:.7rem; padding:.6rem .75rem; overflow-x:auto; white-space:nowrap; word-break:normal; }
+    .crypto-addr::-webkit-scrollbar{ height:0; }
+    .crypto-copy-btn{ flex:none; font-family:"Plus Jakarta Sans",sans-serif; font-weight:600; font-size:.82rem; color:#0e0e12; background:#fff; border:none; cursor:pointer; border-radius:.7rem; padding:.6rem 1.1rem; box-shadow:0 8px 24px -14px rgba(0,0,0,.6); transition:background .2s ease, color .2s ease, transform .18s ease, box-shadow .2s ease; }
+    .crypto-copy-btn:hover{ transform:translateY(-1px); box-shadow:0 12px 32px -14px rgba(154,139,255,.6); }
+    .crypto-copy-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+
+    /* Social anchors — monochrome monospace */
+    .social-anchor{ font-family:"JetBrains Mono",monospace; font-size:.72rem; letter-spacing:.08em; color:#8a8a94; transition:color .2s ease; }
+    .social-anchor:hover{ color:#ededf0; }
+
+    .disclaimer-mono{ font-family:"JetBrains Mono",monospace; font-size:.66rem; line-height:1.8; letter-spacing:.14em; text-transform:uppercase; color:rgba(255,255,255,.24); }
+
+    /* ---------- Reduced motion ---------- */
+    @media (prefers-reduced-motion: reduce){
+      html{ scroll-behavior:auto; }
+      .scroll-cue .arrow, .sim-bar::after, .dots span, .btn-primary .spinner{ animation:none; }
+      [data-reveal]{ transition-duration:.001ms; }
+    }
+  </style>
+</head>
+
+<body class="font-body bg-base text-ink antialiased selection:bg-accent/30">
+
+  <!-- Ambient timelines -->
+  <canvas id="bg"></canvas>
+
+  <!-- ============================ SECTION 1 · HERO ============================ -->
+  <section id="hero" class="relative min-h-screen flex flex-col items-center justify-center px-6 text-center overflow-hidden">
+    <div class="hero-inner max-w-4xl mx-auto">
+      <p class="eyebrow mb-8">&#9671;&nbsp;&nbsp;Financial Freedom Simulator</p>
+
+      <h1 class="leading-none">
+        <span class="title-num block">1000</span>
+        <span class="title-word block mt-3 md:mt-4 ml-[.34em]">Alternative Universes</span>
+      </h1>
+
+      <p class="mt-10 mx-auto max-w-2xl text-mute font-body text-base md:text-lg leading-relaxed">
+        This is not a fortune teller. It&rsquo;s a time machine simulating 100 years of stock
+        market history across 1,000 parallel dimensions.
+      </p>
+    </div>
+
+    <!-- Scroll cue -->
+    <a href="#inputs" class="scroll-cue absolute bottom-9 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 group" aria-label="Scroll to the input section">
+      <span class="arrow flex items-center justify-center w-11 h-11 rounded-full border border-white/15 text-ink/80 group-hover:border-accent group-hover:text-accent transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </span>
+      <span class="font-mono text-[.7rem] tracking-[.28em] uppercase text-mute group-hover:text-ink/80 transition-colors">Scroll to discover your futures&hellip;</span>
+    </a>
+  </section>
+
+  <!-- ========================= SECTION 2 · DATA INPUT ========================= -->
+  <section id="inputs" class="relative min-h-screen flex items-center px-6 py-24">
+    <div class="w-full max-w-3xl mx-auto">
+
+      <header class="mb-14" data-reveal>
+        <p class="eyebrow mb-4">Step 01&nbsp;&middot;&nbsp;Calibrate the simulation</p>
+        <h2 class="font-display font-bold text-4xl md:text-6xl tracking-tight leading-[1.02]">Set your starting conditions</h2>
+        <p class="mt-5 text-mute max-w-xl leading-relaxed">Three variables decide how your thousand lives unfold. Adjust them, then run the simulation.</p>
+      </header>
+
+      <!-- Current Age -->
+      <div class="mb-14" data-reveal style="--d:80ms">
+        <div class="flex items-end justify-between mb-5">
+          <label for="age" class="font-mono text-[.72rem] tracking-[.24em] uppercase text-mute">Current age</label>
+          <div class="readout font-display font-bold text-5xl md:text-6xl"><span id="ageOut">28</span><span class="text-mute text-2xl md:text-3xl font-medium ml-1.5">yrs</span></div>
+        </div>
+        <input id="age" class="range" type="range" min="15" max="65" value="28" step="1" aria-label="Current age in years" />
+        <div class="flex justify-between mt-3 font-mono text-[.68rem] text-mute/70"><span>15</span><span>65</span></div>
+      </div>
+
+      <!-- Monthly Savings -->
+      <div class="mb-16" data-reveal style="--d:150ms">
+        <div class="flex items-end justify-between mb-5">
+          <label for="savings" class="font-mono text-[.72rem] tracking-[.24em] uppercase text-mute">Monthly savings target</label>
+          <div class="readout font-display font-bold text-5xl md:text-6xl"><span class="text-mute text-3xl md:text-4xl font-medium mr-0.5">$</span><span id="savingsOut">500</span></div>
+        </div>
+        <input id="savings" class="range" type="range" min="10" max="5000" value="500" step="10" aria-label="Monthly savings target in dollars" />
+        <div class="flex justify-between mt-3 font-mono text-[.68rem] text-mute/70"><span>$10</span><span>$5,000</span></div>
+      </div>
+
+      <!-- Investment Personality -->
+      <div data-reveal style="--d:220ms">
+        <p class="font-mono text-[.72rem] tracking-[.24em] uppercase text-mute mb-5">Investment personality</p>
+        <div id="personas" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+          <button type="button" class="persona group" data-key="cautious" aria-pressed="false" style="--tint:#e5b45a">
+            <span class="flex items-center justify-between mb-4">
+              <span class="dot"></span>
+              <svg class="check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--tint)"><path d="M20 6L9 17l-5-5"/></svg>
+            </span>
+            <span class="block font-display font-bold text-xl text-ink">Cautious</span>
+            <span class="block font-mono text-[.68rem] tracking-[.16em] uppercase text-mute mt-1">Gold &amp; Bonds</span>
+            <span class="block text-sm text-mute leading-relaxed mt-3">Steady hands. Protect what you have and grow it slowly.</span>
+          </button>
+
+          <button type="button" class="persona group" data-key="balanced" aria-pressed="true" style="--tint:#6fa8ff">
+            <span class="flex items-center justify-between mb-4">
+              <span class="dot"></span>
+              <svg class="check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--tint)"><path d="M20 6L9 17l-5-5"/></svg>
+            </span>
+            <span class="block font-display font-bold text-xl text-ink">Balanced</span>
+            <span class="block font-mono text-[.68rem] tracking-[.16em] uppercase text-mute mt-1">Global Funds</span>
+            <span class="block text-sm text-mute leading-relaxed mt-3">Spread across the world. Measured risk, measured reward.</span>
+          </button>
+
+          <button type="button" class="persona group" data-key="aggressive" aria-pressed="false" style="--tint:#ff7a6b">
+            <span class="flex items-center justify-between mb-4">
+              <span class="dot"></span>
+              <svg class="check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--tint)"><path d="M20 6L9 17l-5-5"/></svg>
+            </span>
+            <span class="block font-display font-bold text-xl text-ink">Aggressive</span>
+            <span class="block font-mono text-[.68rem] tracking-[.16em] uppercase text-mute mt-1">S&amp;P 500</span>
+            <span class="block text-sm text-mute leading-relaxed mt-3">All in on growth. Bigger swings, far bigger horizons.</span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Save & Simulate -->
+      <div class="mt-12 flex flex-col items-center text-center" data-reveal style="--d:300ms">
+        <button id="simulateBtn" type="button" class="btn-primary">
+          <span>Save &amp; Simulate Timelines</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+        <p class="mt-4 font-mono text-[.68rem] tracking-[.22em] uppercase text-mute/70">1,000 Monte Carlo runs &middot; 40-year horizon</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================== SIMULATION FLOW (hidden until run) ===================== -->
+  <div id="simulation" hidden>
+
+    <!-- Simulation status -->
+    <section class="px-6 py-24 flex justify-center">
+      <div id="sim" class="w-full max-w-2xl rounded-2xl border border-white/10 bg-white/[.02] p-6 md:p-7">
+        <p class="font-mono text-sm text-ink flex items-start gap-2">
+          <span class="text-accent">&gt;</span>
+          <span>Data received. 1,000 timelines are being simulated in the background<span class="dots"><span>.</span><span>.</span><span>.</span></span></span>
+        </p>
+        <div class="sim-bar mt-4"></div>
+        <p class="mt-4 flex items-center gap-2 text-mute text-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          Keep scrolling down to reveal your answers.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================== SECTION 3 · THE FIRST STORY CARD ===================== -->
+    <section class="min-h-screen flex items-center px-6 py-24">
+      <article class="story-card w-full max-w-2xl mx-auto" data-reveal>
+        <p class="eyebrow mb-6">A true story &middot; read while it computes</p>
+        <p class="text-mute leading-relaxed mb-5">While the system computes 1,000 different market scenarios, read this:</p>
+        <h3 class="font-display font-bold text-3xl md:text-4xl tracking-tight mb-5">Meet Ronald Read.</h3>
+        <p class="text-base md:text-lg text-ink/85 leading-relaxed">
+          He spent his entire life working as a gas station attendant and a janitor. Yet, he
+          regularly put his small earnings into basic stock market index funds. When he died at
+          age 92, he was a secret multimillionaire, leaving millions to local libraries.
+        </p>
+        <blockquote class="pull">The formula isn&rsquo;t earning massive wealth; it&rsquo;s starting early and staying consistent.</blockquote>
+      </article>
+    </section>
+
+    <!-- ===================== SECTION 4 · FIRST RESULT (THE MEDIAN UNIVERSE) ===================== -->
+    <section class="min-h-screen flex items-center px-6 py-24">
+      <div id="resultPanel" class="panel w-full max-w-3xl mx-auto" data-reveal>
+        <p class="eyebrow mb-4">The median universe &middot; 1,000 runs complete</p>
+        <h3 class="font-display font-bold text-4xl md:text-5xl tracking-tight">Universe #412</h3>
+        <p class="mt-1 text-accent-soft font-display font-semibold text-xl md:text-2xl" style="color:var(--accent-soft)">The Realistic Scenario</p>
+        <p id="resultMeta" class="mt-4 font-mono text-[.72rem] tracking-[.12em] text-mute leading-relaxed">Strategy &middot; awaiting simulation</p>
+
+        <!-- Headline stats -->
+        <div class="grid sm:grid-cols-2 gap-8 sm:gap-6 mt-10 items-start">
+          <div>
+            <div class="stat-num" id="freedomAge">&mdash;</div>
+            <p class="mt-3 font-mono text-[.7rem] tracking-[.2em] uppercase text-mute">Age of financial freedom</p>
+          </div>
+          <div>
+            <div class="flex items-baseline gap-1">
+              <span class="font-display font-bold text-6xl md:text-7xl text-ink readout" id="successPct">&mdash;</span>
+              <span class="font-display font-bold text-3xl md:text-4xl" style="color:var(--accent)">%</span>
+            </div>
+            <p class="mt-3 font-mono text-[.7rem] tracking-[.2em] uppercase text-mute leading-relaxed">Probability of success<br/>(reaching $600k before 75)</p>
+          </div>
+        </div>
+
+        <p class="mt-6 font-mono text-[.68rem] tracking-[.1em] text-mute/70">Freedom line: $600,000 &nbsp;=&nbsp; 25 &times; $24,000 annual need.</p>
+
+        <hr class="my-8 border-white/10" />
+
+        <!-- Dynamic sentence -->
+        <p id="resultSentence" class="text-base md:text-lg text-ink/85 leading-relaxed max-w-2xl">
+          Run the simulation above to reveal your median timeline.
+        </p>
+
+        <!-- Teaser -->
+        <p class="mt-8 flex items-start gap-2 text-mute leading-relaxed">
+          <svg class="mt-1 shrink-0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          <span>But wait&mdash;this is only the median timeline. In other parallel universes, things can spin completely out of control&hellip; Scroll further down.</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================== SECTION 5 · THE INFLATION PARADOX ===================== -->
+    <section class="min-h-screen flex items-center px-6 py-24">
+      <article class="story-card w-full max-w-2xl mx-auto" data-reveal>
+        <p class="eyebrow mb-6" style="color:var(--coral)">A reality check &middot; the hidden tax</p>
+        <h3 class="font-display font-bold text-3xl md:text-4xl tracking-tight mb-6">The Ghost in the Room: Inflation.</h3>
+        <p class="text-base md:text-lg text-ink/85 leading-relaxed">
+          Here is a quick reality check: That $5 coffee you decided not to buy today isn&rsquo;t just $5.
+          In our simulation engine, adjusted for long-term compound growth, that small friction of daily
+          casual spending turns into thousands of dollars over 30 years. Small, unnoticed leaks today are
+          the heavy anchors delaying your freedom tomorrow.
+        </p>
+        <blockquote class="pull" style="border-left-color:var(--coral)">Vices compound negatively; assets compound positively.</blockquote>
+      </article>
+    </section>
+
+    <!-- ===================== SECTION 6 · THE EXTREME TIMELINES ===================== -->
+    <section class="min-h-screen flex items-center px-6 py-24">
+      <div class="w-full max-w-5xl mx-auto">
+        <p class="eyebrow mb-4" data-reveal>The extreme timelines &middot; 2 of 1,000</p>
+        <h3 class="font-display font-bold text-3xl md:text-5xl tracking-tight mb-3" data-reveal>When the dice fall differently</h3>
+        <p class="text-mute max-w-2xl mb-10 leading-relaxed" data-reveal>Same you, same discipline &mdash; but two wildly different draws of history, pulled straight from your 1,000 runs.</p>
+
+        <div class="grid md:grid-cols-2 gap-6">
+
+          <!-- Best case -->
+          <article class="extreme-card" data-reveal style="--d:80ms">
+            <span class="tag" style="color:var(--cyan)"><span class="pip"></span>Best-Case</span>
+            <h4 class="font-display font-bold text-2xl mt-4">Universe #991</h4>
+            <p class="font-display font-semibold text-lg mt-0.5" style="color:var(--cyan)">The Golden Timeline</p>
+            <p class="text-ink/80 leading-relaxed mt-4">The universe where you caught every single bull market, and no major crash occurred during your core accumulation years.</p>
+            <p id="bestOutcome" class="font-display font-semibold text-lg mt-3" style="color:var(--cyan)">You achieve financial freedom at age &mdash;.</p>
+            <div class="chart-frame"><canvas id="bestChart"></canvas></div>
+            <p class="legend-chip mt-3"><span><i style="background:var(--cyan)"></i>Portfolio</span><span><i style="background:rgba(255,255,255,.4)"></i>Freedom $600k</span></p>
+          </article>
+
+          <!-- Worst case -->
+          <article class="extreme-card" data-reveal style="--d:180ms">
+            <span class="tag" style="color:var(--coral)"><span class="pip"></span>Worst-Case</span>
+            <h4 class="font-display font-bold text-2xl mt-4">Universe #12</h4>
+            <p class="font-display font-semibold text-lg mt-0.5" style="color:var(--coral)">The Zombie Apocalypse</p>
+            <p class="text-ink/80 leading-relaxed mt-4">The universe where you started investing right before a historical market crash. Portfolios decayed, recoveries took a decade, and growth felt like wading through mud.</p>
+            <p id="worstOutcome" class="font-display font-semibold text-lg mt-3" style="color:var(--coral)">You achieve financial freedom at age &mdash;.</p>
+            <div class="chart-frame"><canvas id="worstChart"></canvas></div>
+            <p class="legend-chip mt-3"><span><i style="background:var(--coral)"></i>Portfolio</span><span><i style="background:rgba(255,255,255,.4)"></i>Freedom $600k</span></p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SECTION 7 · EPILOGUE, RULES & SUPPORT ===================== -->
+    <footer class="px-6 pt-24 pb-14 border-t border-white/5">
+      <div class="max-w-2xl mx-auto flex flex-col space-y-16">
+
+        <!-- Element A · The Rules of Reality -->
+        <div data-reveal>
+          <h3 class="font-display font-bold text-2xl md:text-3xl tracking-tight mb-8">The Rules of Reality</h3>
+          <ol class="rules-list">
+            <li class="rule-item">
+              <span class="rule-num">01</span>
+              <div>
+                <p class="rule-title">Start early</p>
+                <p class="rule-desc">Time does significantly heavier lifting than raw capital due to compounding. Every year you delay doubles the effort required.</p>
+              </div>
+            </li>
+            <li class="rule-item">
+              <span class="rule-num">02</span>
+              <div>
+                <p class="rule-title">Own productive assets</p>
+                <p class="rule-desc">Cash is a melting ice cube in a warm room. Protect your purchasing power by owning global infrastructure, businesses, or gold.</p>
+              </div>
+            </li>
+            <li class="rule-item">
+              <span class="rule-num">03</span>
+              <div>
+                <p class="rule-title">Embrace the boring days</p>
+                <p class="rule-desc">The market is a sophisticated machine designed to transfer wealth from the impatient to the patient. Extreme adrenaline ruins portfolios.</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+
+        <!-- Element C · Support the Dimensions -->
+        <div data-reveal style="--d:120ms">
+          <h3 class="font-display font-bold text-2xl md:text-3xl tracking-tight mb-4">Support the Dimensions</h3>
+          <p class="text-mute leading-relaxed mb-8">This simulator computes 1,000 parallel realities based on 100 years of real market mathematics. If this time machine shifted your financial horizon, consider supporting the journey.</p>
+
+          <div class="max-w-sm w-full mx-auto flex flex-col gap-4">
+            <!-- Crypto tip · MetaMask -->
+            <div class="crypto-box">
+              <div class="flex items-center gap-2 mb-2">
+                <span aria-hidden="true">&#129418;</span>
+                <span class="font-display font-semibold text-ink">Crypto Tip via MetaMask</span>
+              </div>
+              <p class="text-mute text-sm leading-relaxed mb-4">If this time machine expanded your horizon, consider leaving a small tip to the ETH / EVM wallet.</p>
+              <div class="crypto-addr-row">
+                <code id="cryptoAddr" class="crypto-addr">0x8b95A58d3dA6B2007D1B47a1A9Afac5b0Cc26b67</code>
+                <button type="button" id="copyBtn" class="crypto-copy-btn" onclick="copyCryptoAddress()">Copy</button>
+              </div>
+            </div>
+
+            <a href="mailto:kivancglc16@gmail.com?subject=Financial Simulator Feedback" class="foot-btn news-btn">
+              <span aria-hidden="true">&#128233;</span>
+              <span>Stay Updated &amp; Feedback</span>
+            </a>
+          </div>
+
+          <div class="flex items-center justify-center gap-5 mt-6">
+            <a href="https://github.com/ind-vision-core" target="_blank" rel="noopener noreferrer" class="social-anchor">/github</a>
+          </div>
+        </div>
+
+        <!-- Element D · The witty disclaimer -->
+        <div data-reveal style="--d:160ms" class="text-center pt-8 border-t border-white/5">
+          <p class="disclaimer-mono max-w-2xl mx-auto">Disclaimer: This is an educational time machine, not certified financial advice. Parallel dimensions may vary due to chaotic quantum or macroeconomic states. Go build your reality.</p>
+        </div>
+
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    'use strict';
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* ============ Ambient background: 1,000 timelines (drifting lines) ============ */
+    (function ambient(){
+      const canvas = document.getElementById('bg');
+      const ctx = canvas.getContext('2d');
+      let W = 0, H = 0, DPR = 1, lines = [], raf = 0, my = 0.5;
+
+      function build(){
+        const count = reduceMotion ? 10 : 22;
+        lines = [];
+        for (let i = 0; i < count; i++){
+          const n = 3 + (Math.random() * 3 | 0);
+          const layers = [];
+          for (let j = 0; j < n; j++){
+            layers.push({
+              amp:  Math.random() * 0.05 + 0.018,
+              freq: Math.random() * 1.6 + 0.4,
+              phase:Math.random() * Math.PI * 2,
+              speed:(Math.random() * 0.25 + 0.08) * (Math.random() < 0.5 ? -1 : 1),
+            });
+          }
+          const t = Math.random();
+          lines.push({
+            base: (i + 0.5) / count,
+            color: t < 0.55 ? 'rgba(255,255,255,.045)' : (t < 0.82 ? 'rgba(154,139,255,.06)' : 'rgba(95,224,214,.05)'),
+            layers,
+          });
+        }
+      }
+
+      function resize(){
+        DPR = Math.min(window.devicePixelRatio || 1, 2);
+        W = canvas.width  = Math.floor(innerWidth  * DPR);
+        H = canvas.height = Math.floor(innerHeight * DPR);
+        canvas.style.width  = innerWidth  + 'px';
+        canvas.style.height = innerHeight + 'px';
+      }
+
+      function draw(t){
+        ctx.clearRect(0, 0, W, H);
+        const time = t * 0.0006;
+        const step = Math.max(8, (8 * DPR) | 0);
+        for (const line of lines){
+          ctx.beginPath();
+          const yBase = line.base * H;
+          for (let x = 0; x <= W; x += step){
+            const nx = x / W;
+            let y = yBase;
+            for (const L of line.layers){
+              y += Math.sin(nx * Math.PI * 2 * L.freq + L.phase + time * L.speed * 6) * L.amp * H;
+            }
+            y += (my - 0.5) * 16 * DPR * (line.base - 0.5); // gentle parallax
+            x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+          }
+          ctx.strokeStyle = line.color;
+          ctx.lineWidth = DPR;
+          ctx.stroke();
+        }
+      }
+
+      function loop(t){ draw(t); raf = requestAnimationFrame(loop); }
+
+      resize(); build();
+      if (reduceMotion){ draw(0); }
+      else { raf = requestAnimationFrame(loop); }
+
+      addEventListener('resize', () => { resize(); build(); if (reduceMotion) draw(0); });
+      if (!reduceMotion) addEventListener('mousemove', e => { my = e.clientY / innerHeight; }, { passive:true });
+    })();
+
+    /* ============ Main app: scroll, reveals, inputs, Monte Carlo ============ */
+    (function app(){
+      const $  = (s, r = document) => r.querySelector(s);
+      const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+      const fmt = new Intl.NumberFormat('en-US');
+
+      /* ---- Simulation constants ---- */
+      const PERSONA = {
+        cautious:   { mean: 0.025, vol: 0.05, label: 'Cautious',   asset: 'Gold & Bonds'  },
+        balanced:   { mean: 0.055, vol: 0.12, label: 'Balanced',   asset: 'Global Funds'  },
+        aggressive: { mean: 0.075, vol: 0.18, label: 'Aggressive', asset: 'S&P 500'       },
+      };
+      const ANNUAL_NEED = 24000;
+      const FI_TARGET   = ANNUAL_NEED * 25;   // $600,000
+      const HORIZON     = 40;                 // years
+      const RUNS        = 1000;               // parallel universes
+      const AGE_CAP     = 75;                 // success must occur before this age
+
+      let simResult = null;
+      let resultVisible = false;
+
+      /* ---- Shared reveal observer ---- */
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (!e.isIntersecting) return;
+          e.target.classList.add('in');
+          if (e.target.id === 'resultPanel') {
+            resultVisible = true;
+            if (simResult) animateNumbers(simResult);
+          }
+          io.unobserve(e.target);
+        });
+      }, { threshold: 0.18 });
+      $$('[data-reveal]').forEach(el => io.observe(el));
+
+      /* ---- Hero parallax + fade ---- */
+      (function heroScroll(){
+        const inner = $('.hero-inner'), cue = $('.scroll-cue');
+        let ticking = false;
+        function frame(){
+          const y = scrollY, vh = innerHeight, p = Math.min(y / (vh * 0.9), 1);
+          if (inner){
+            inner.style.opacity = String(1 - p);
+            if (!reduceMotion) inner.style.transform = `translateY(${p * -70}px)`;
+          }
+          if (cue) cue.style.opacity = String(1 - Math.min(y / (vh * 0.35), 1));
+          ticking = false;
+        }
+        addEventListener('scroll', () => { if (!ticking){ requestAnimationFrame(frame); ticking = true; } }, { passive:true });
+        frame();
+      })();
+
+      /* ---- Inputs: sliders + persona selection (no auto-reveal anymore) ---- */
+      function bindRange(id, outId, format){
+        const el = $('#' + id), out = $('#' + outId);
+        const update = () => {
+          const mn = +el.min, mx = +el.max, v = +el.value;
+          el.style.setProperty('--fill', (((v - mn) / (mx - mn)) * 100).toFixed(2) + '%');
+          out.textContent = format(v);
+        };
+        el.addEventListener('input', update);
+        update();
+      }
+      bindRange('age', 'ageOut', v => fmt.format(v));
+      bindRange('savings', 'savingsOut', v => fmt.format(v));
+
+      const personas = $$('.persona');
+      personas.forEach(card => card.addEventListener('click', () => {
+        personas.forEach(c => c.setAttribute('aria-pressed', 'false'));
+        card.setAttribute('aria-pressed', 'true');
+      }));
+
+      /* ---- Monte Carlo engine ---- */
+      // Standard normal via Box–Muller
+      function gaussian(){
+        let u = 0, v = 0;
+        while (u === 0) u = Math.random();
+        while (v === 0) v = Math.random();
+        return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+      }
+
+      function runSimulation(age, monthly, key){
+        const { mean, vol } = PERSONA[key];
+        const contribution = monthly * 12;
+        const tracks = [];              // RUNS x (HORIZON + 1)
+        let successCount = 0;
+
+        for (let i = 0; i < RUNS; i++){
+          let portfolio = 0;
+          const track = [0];
+          let succeeded = false;
+          for (let t = 1; t <= HORIZON; t++){
+            const r = mean + vol * gaussian();      // sampled annual real return
+            portfolio = portfolio * (1 + r) + contribution;
+            if (portfolio < 0) portfolio = 0;       // safety floor (extremely rare)
+            track.push(portfolio);
+            if (!succeeded && portfolio >= FI_TARGET && (age + t) < AGE_CAP) succeeded = true;
+          }
+          if (succeeded) successCount++;
+          tracks.push(track);
+        }
+
+        // Median portfolio value per year -> the "median track"
+        const median = [];
+        for (let t = 0; t <= HORIZON; t++){
+          const col = tracks.map(tr => tr[t]).sort((a, b) => a - b);
+          const m = col.length >> 1;
+          median.push(col.length % 2 ? col[m] : (col[m - 1] + col[m]) / 2);
+        }
+
+        // Age at which the median track first crosses the freedom line
+        let freedomAge = null;
+        for (let t = 1; t <= HORIZON; t++){
+          if (median[t] >= FI_TARGET){ freedomAge = age + t; break; }
+        }
+
+        // Extract the extreme universes by final portfolio value
+        let bestIdx = 0, worstIdx = 0;
+        for (let i = 1; i < RUNS; i++){
+          if (tracks[i][HORIZON] > tracks[bestIdx][HORIZON])  bestIdx  = i;
+          if (tracks[i][HORIZON] < tracks[worstIdx][HORIZON]) worstIdx = i;
+        }
+        const best  = { track: tracks[bestIdx],  age: crossingAge(tracks[bestIdx],  age) };
+        const worst = { track: tracks[worstIdx], age: crossingAge(tracks[worstIdx], age) };
+
+        return {
+          freedomAge,
+          successPct: Math.round((successCount / RUNS) * 100),
+          median,
+          best,
+          worst,
+          tracks,                 // kept for a possible future distribution view
+          personaKey: key,
+          startAge: age,
+          monthly,
+        };
+      }
+
+      // First age a single track crosses the freedom line (null if never within horizon)
+      function crossingAge(track, startAge){
+        for (let t = 1; t < track.length; t++){
+          if (track[t] >= FI_TARGET) return startAge + t;
+        }
+        return null;
+      }
+
+      /* ---- Rendering ---- */
+      function buildSentence(res){
+        if (res.freedomAge !== null){
+          return `In a standard world where things move normally and market crises come and go, you achieve financial freedom at the age of ${res.freedomAge}. Your probability of absolute success in this timeline is: ${res.successPct}%.`;
+        }
+        return `In a standard world where things move normally and market crises come and go, your median timeline doesn't cross the $600,000 freedom line within the 40-year horizon. Across all 1,000 runs, your probability of reaching it before age 75 is: ${res.successPct}%. The lever here is time and consistency — start earlier, or raise your monthly target.`;
+      }
+
+      function renderResult(res){
+        const p = PERSONA[res.personaKey];
+        $('#resultMeta').textContent =
+          `Strategy · ${p.label} — ${p.asset} · ${(p.mean * 100).toFixed(1)}% net, ${(p.vol * 100).toFixed(0)}% volatility · $${fmt.format(res.monthly)}/mo from age ${res.startAge}`;
+        $('#resultSentence').textContent = buildSentence(res);
+        if (resultVisible) animateNumbers(res);
+      }
+
+      function countUp(el, from, to, dur, format){
+        if (reduceMotion){ el.textContent = format(to); return; }
+        const t0 = performance.now();
+        (function step(now){
+          const pr = Math.min((now - t0) / dur, 1);
+          const eased = 1 - Math.pow(1 - pr, 3);
+          el.textContent = format(from + (to - from) * eased);
+          if (pr < 1) requestAnimationFrame(step);
+        })(performance.now());
+      }
+
+      function animateNumbers(res){
+        const ageEl = $('#freedomAge'), pctEl = $('#successPct');
+        if (res.freedomAge === null) ageEl.textContent = '75+';
+        else countUp(ageEl, res.startAge, res.freedomAge, 1100, v => Math.round(v));
+        countUp(pctEl, 0, res.successPct, 1100, v => Math.round(v));
+      }
+
+      /* ---- Extreme-timeline charts (Chart.js) ---- */
+      const charts = { best: null, worst: null };
+
+      // Compact currency label: $600k, $1.9M
+      function money(v){
+        v = Math.round(v);
+        if (Math.abs(v) >= 1e6) return '$' + (v / 1e6).toFixed(v % 1e6 === 0 ? 0 : 1) + 'M';
+        if (Math.abs(v) >= 1e3) return '$' + Math.round(v / 1e3) + 'k';
+        return '$' + v;
+      }
+
+      // Vertical gradient fill under the line (scriptable, needs chartArea)
+      function gradientFill(rgb, topAlpha){
+        return (context) => {
+          const { ctx, chartArea } = context.chart;
+          if (!chartArea) return `rgba(${rgb},0)`;
+          const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+          g.addColorStop(0, `rgba(${rgb},${topAlpha})`);
+          g.addColorStop(1, `rgba(${rgb},0)`);
+          return g;
+        };
+      }
+
+      // Soft glow applied only to the portfolio line (dataset 0)
+      const glowPlugin = {
+        id: 'glow',
+        beforeDatasetDraw(chart, args, opts){
+          if (args.index !== 0) return;
+          chart.ctx.save();
+          chart.ctx.shadowColor = opts.color;
+          chart.ctx.shadowBlur = opts.blur;
+        },
+        afterDatasetDraw(chart, args){
+          if (args.index === 0) chart.ctx.restore();
+        },
+      };
+
+      function drawChart(canvasId, track, startAge, rgb, fillAlpha, glowColor, blur){
+        if (typeof Chart === 'undefined') return null;   // CDN failed to load — skip gracefully
+        const canvas = document.getElementById(canvasId);
+        const labels = track.map((_, i) => startAge + i);
+        const maxVal = Math.max.apply(null, track);
+        return new Chart(canvas.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              {
+                data: track,
+                borderColor: `rgb(${rgb})`,
+                borderWidth: 2,
+                tension: 0.35,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                pointHoverBackgroundColor: `rgb(${rgb})`,
+                pointHoverBorderColor: '#0e0e12',
+                pointHoverBorderWidth: 2,
+                fill: true,
+                backgroundColor: gradientFill(rgb, fillAlpha),
+              },
+              {
+                // Dashed reference line at the $600k freedom threshold
+                data: labels.map(() => FI_TARGET),
+                borderColor: 'rgba(255,255,255,0.28)',
+                borderWidth: 1,
+                borderDash: [5, 5],
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                fill: false,
+                tension: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: reduceMotion ? false : { duration: 900, easing: 'easeOutCubic' },
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: { display: false },
+              glow: { color: glowColor, blur: blur },
+              tooltip: {
+                filter: (item) => item.datasetIndex === 0,   // hide the reference line
+                backgroundColor: 'rgba(18,18,22,0.95)',
+                borderColor: 'rgba(255,255,255,0.12)',
+                borderWidth: 1,
+                cornerRadius: 8,
+                padding: 10,
+                displayColors: false,
+                titleColor: '#8a8a94',
+                bodyColor: '#ededf0',
+                titleFont: { family: "'JetBrains Mono', monospace", size: 11 },
+                bodyFont: { family: "'Plus Jakarta Sans', sans-serif", size: 14, weight: '700' },
+                callbacks: {
+                  title: (items) => `Age ${items[0].label}`,
+                  label: (item) => money(item.parsed.y),
+                },
+              },
+            },
+            scales: {
+              x: {
+                grid: { display: false },
+                border: { display: false },
+                ticks: { color: '#6f6f78', font: { family: "'JetBrains Mono', monospace", size: 10 }, maxTicksLimit: 6, autoSkip: true, maxRotation: 0 },
+              },
+              y: {
+                beginAtZero: true,
+                suggestedMax: Math.max(maxVal, FI_TARGET) * 1.08,   // always keep the freedom line in view
+                grid: { color: 'rgba(255,255,255,0.045)' },
+                border: { display: false },
+                ticks: { color: '#6f6f78', font: { family: "'JetBrains Mono', monospace", size: 10 }, maxTicksLimit: 5, callback: (v) => money(v) },
+              },
+            },
+          },
+          plugins: [glowPlugin],
+        });
+      }
+
+      function outcomeText(age, never){
+        if (age !== null) return `You achieve financial freedom at age ${age}.`;
+        return never
+          ? `You never reach financial freedom within this 40-year horizon.`
+          : `You still don't cross the $600,000 line within this 40-year horizon.`;
+      }
+
+      function renderExtremes(res){
+        $('#bestOutcome').textContent  = outcomeText(res.best.age, false);
+        $('#worstOutcome').textContent = outcomeText(res.worst.age, true);
+        if (charts.best)  charts.best.destroy();     // clean up before a re-simulate
+        if (charts.worst) charts.worst.destroy();
+        charts.best  = drawChart('bestChart',  res.best.track,  res.startAge, '95,224,216',  0.32, 'rgba(95,224,216,0.5)',  12);
+        charts.worst = drawChart('worstChart', res.worst.track, res.startAge, '255,122,107', 0.22, 'rgba(255,122,107,0.4)', 8);
+      }
+
+      /* ---- Save & Simulate flow ---- */
+      const flow = $('#simulation'), sim = $('#sim'), btn = $('#simulateBtn');
+      const ARROW = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+
+      function setBtn(state){
+        if (state === 'loading'){
+          btn.disabled = true;
+          btn.innerHTML = '<span class="spinner"></span><span>Computing 1,000 timelines…</span>';
+        } else {
+          btn.disabled = false;
+          btn.innerHTML = (state === 'done')
+            ? '<span>Re-simulate Timelines</span>' + ARROW
+            : '<span>Save &amp; Simulate Timelines</span>' + ARROW;
+        }
+      }
+
+      function smoothTo(el){
+        el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+      }
+
+      btn.addEventListener('click', () => {
+        const age = +$('#age').value;
+        const monthly = +$('#savings').value;
+        const selected = $('.persona[aria-pressed="true"]');
+        const key = selected ? selected.dataset.key : 'balanced';
+
+        setBtn('loading');
+
+        // Reveal the flow + status box immediately, then nudge the user down to it
+        flow.hidden = false;
+        requestAnimationFrame(() => sim.classList.add('revealed'));
+        smoothTo(sim);
+
+        // Brief delay so the "computing" state reads as real work
+        setTimeout(() => {
+          simResult = runSimulation(age, monthly, key);
+          window.__sim = simResult;        // exposed for debugging / future steps
+          renderResult(simResult);         // median universe panel
+          renderExtremes(simResult);       // best/worst outcome text + Chart.js line charts
+          setBtn('done');
+        }, 850);
+      });
+    })();
+  </script>  <!-- Crypto address copy-to-clipboard -->
+  <script>
+    'use strict';
+    function copyCryptoAddress(){
+      const addrEl = document.getElementById('cryptoAddr');
+      const btn = document.getElementById('copyBtn');
+      if (!addrEl || !btn) return;
+      const address = addrEl.textContent.trim();
+
+      const showCopied = () => {
+        btn.textContent = 'Copied! \u2713';
+        btn.style.background = '#9a8bff';
+        btn.style.color = '#fff';
+        setTimeout(() => {
+          btn.textContent = 'Copy';
+          btn.style.background = '';
+          btn.style.color = '';
+        }, 2000);
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(address).then(showCopied).catch(() => fallbackCopy(address, showCopied));
+      } else {
+        fallbackCopy(address, showCopied);
+      }
+    }
+
+    // Fallback for older browsers / non-secure contexts
+    function fallbackCopy(text, done){
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+      done();
+    }
+  </script>
+
+</body>
+</html>
